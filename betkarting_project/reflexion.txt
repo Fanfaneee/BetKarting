@@ -1,0 +1,27 @@
+Class CustomUser: 
+- username 
+- email 
+- password 
+- balance 
+- liste_paris
+
+Class Pilote: 
+- nom 
+- prenom 
+- equipe 
+- proba
+
+Class Course: 
+- ville 
+- record 
+- liste_pilotes
+
+Class Pari: 
+- ID 
+- user (CustomUser) 
+- course (Course) 
+- pilote_choisi(Pilote) 
+- montant 
+- multiplicateur 
+- resultat 
+- date

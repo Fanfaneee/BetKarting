@@ -1,0 +1,18 @@
+{% extends "betkarting_app/base.html" %}
+
+{% block title %}Profil{% endblock %}
+{% block content %}
+
+<h2>Profil de {{ user.username }}</h2>
+<p>Email : {{ user.email }}</p>
+<p>Solde : {{ user.balance }}</p>
+
+<h3>Mes paris :</h3>
+<ul>
+    {% for bet in user.bet_set.all %}
+    <li>Course : {{ bet.race.name }} - Montant : {{ bet.amount }} - Résultat : {{ bet.result }}</li>
+    {% empty %}
+    <li>Vous n'avez pas encore parié.</li>
+    {% endfor %}
+</ul>
+{% endblock %}
