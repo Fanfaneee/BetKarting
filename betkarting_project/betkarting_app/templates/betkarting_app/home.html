@@ -11,155 +11,165 @@
     </h3>
     {% endif %}
 
-    <script>
-        // --- Déclaration des variables globales pour le scope des fonctions ---
-        const expirationTimeMs = {{ date_expiration_ms|default:0 }};
-        const finishUrl = "{{ url_terminer_pari|default:'' }}";
-        const apiResultsUrlBase = "{% url 'api_resultats_html' 0 %}".replace('0/', '');
-        
-        let isCalculating = false;
-        let timerInterval;
+<script>
+    // --- Déclaration des variables globales pour le scope des fonctions ---
+    const expirationTimeMs = {{ date_expiration_ms|default:0 }};
+    const finishUrl = "{{ url_terminer_pari|default:'' }}";
+    const apiResultsUrlBase = "{% url 'api_resultats_html' 0 %}".replace('0/', '');
+    
+    let isCalculating = false;
+    let timerInterval;
 
-        let timerDisplay;
-        let formContainer;
-        let resultsModalElement;
-        
-        function showModal() {
-            resultsModalElement.classList.remove('hidden');
-            resultsModalElement.classList.add('flex');
-        }
+    let timerDisplay;
+    let formContainer;
+    let resultsModalElement;
+    
+    function showModal() {
+        resultsModalElement.classList.remove('hidden');
+        resultsModalElement.classList.add('flex');
+    }
 
-        function hideModal() {
-            resultsModalElement.classList.remove('flex');
-            resultsModalElement.classList.add('hidden');
-            window.location.reload(); 
-        }
+    function hideModal() {
+        resultsModalElement.classList.remove('flex');
+        resultsModalElement.classList.add('hidden');
+        window.location.reload(); 
+    }
 
-        function showResults(courseId) {
-            fetch(`${apiResultsUrlBase}${courseId}/`, {
-                method: 'GET',
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    document.getElementById('results-content').innerHTML = data.html;
-                    showModal();
-                } else {
-                    console.error("Erreur de récupération des résultats:", data.error);
-                    window.location.reload();
-                }
-            })
-            .catch(error => {
-                console.error('Erreur réseau lors de la récupération des résultats:', error);
-                window.location.reload();
-            });
-        }
-
-        function updateTimer() {
-            const nowMs = new Date().getTime();
-            const distance = expirationTimeMs - nowMs;
-
-            if (distance > 0) {
-                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                timerDisplay.innerHTML = `<span class="font-extrabold text-xl text-red-600">${minutes}m ${seconds}s</span>`; 
-
+    function showResults(courseId) {
+        fetch(`${apiResultsUrlBase}${courseId}/`, {
+            method: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('results-content').innerHTML = data.html;
+                showModal();
             } else {
-                // Le temps est écoulé
-                clearInterval(timerInterval);
-                timerDisplay.innerHTML = "**TEMPS ÉCOULÉ ! Calcul des résultats...**";
+                console.error("Erreur de récupération des résultats:", data.error);
+                window.location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Erreur réseau lors de la récupération des résultats:', error);
+            window.location.reload();
+        });
+    }
 
-                if (formContainer) {
-                    formContainer.style.display = 'none';
-                }
+    function updateTimer() {
+        const nowMs = new Date().getTime();
+        const distance = expirationTimeMs - nowMs;
 
-                if (finishUrl && !isCalculating) {
-                    isCalculating = true;
+        if (distance > 0) {
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            timerDisplay.innerHTML = `<span class="font-extrabold text-xl text-red-600">${minutes}m ${seconds}s</span>`; 
 
-                    fetch(finishUrl, {
-                        method: 'POST',
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRFToken': '{{ csrf_token }}'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            showResults(data.course_id); 
-                        } else {
-                            console.error("Erreur de calcul des résultats:", data.message);
-                            window.location.reload();
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Erreur réseau lors du calcul:', error);
+        } else {
+            clearInterval(timerInterval);
+            timerDisplay.innerHTML = "**TEMPS ÉCOULÉ ! Calcul des résultats...**";
+
+            if (formContainer) {
+                formContainer.style.display = 'none';
+            }
+
+            if (finishUrl && !isCalculating) {
+                isCalculating = true;
+
+                fetch(finishUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showResults(data.course_id); 
+                    } else {
+                        console.error("Erreur de calcul des résultats:", data.message);
                         window.location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('Erreur réseau lors du calcul:', error);
+                    window.location.reload();
+                });
+
+            } else if (!finishUrl) {
+                window.location.reload();
+            }
+        }
+    }
+    
+    // --- LANCEMENT DU SCRIPT APRÈS CHARGEMENT COMPLET DE LA PAGE ---
+    window.onload = function() {
+        timerDisplay = document.getElementById('timer-display');
+        formContainer = document.querySelector('form[action*="parier"]'); 
+        resultsModalElement = document.getElementById('resultsModal');
+        
+        document.getElementById('close-modal-button').addEventListener('click', hideModal);
+        document.getElementById('close-footer-button').addEventListener('click', hideModal);
+
+        if (expirationTimeMs > 0 && resultsModalElement) {
+            timerInterval = setInterval(updateTimer, 1000);
+            updateTimer();
+        } else if (timerDisplay) {
+            timerDisplay.innerHTML = "**Erreur de démarrage (Vérifiez les erreurs de console).**";
+        }
+        
+        // 🏎️ Script pour l'animation vidéo au clic du bouton Parier maintenant
+        const betButton = document.getElementById('bet-button');
+        const videoContainer = document.getElementById('video-background-container');
+        const betForm = document.getElementById('bet-form');
+        const bodyElement = document.body;
+        const betVideo = document.getElementById('bet-video'); 
+
+        if (betButton && videoContainer && betForm && betVideo) {
+
+            betForm.addEventListener('submit', async function(event) {
+                event.preventDefault();
+
+                if (!betForm.checkValidity()) return;
+
+                betButton.disabled = true;
+                betButton.textContent = "Pari en cours...";
+
+                const formData = new FormData(betForm);
+
+                try {
+                    const response = await fetch(betForm.action, {
+                        method: "POST",
+                        body: formData
                     });
 
-                } else if (!finishUrl) {
-                    window.location.reload();
-                }
-            }
-        }
-        
-        // --- LANCEMENT DU SCRIPT APRÈS CHARGEMENT COMPLET DE LA PAGE ---
-        window.onload = function() {
-            timerDisplay = document.getElementById('timer-display');
-            formContainer = document.querySelector('form[action*="parier"]'); 
-            resultsModalElement = document.getElementById('resultsModal');
-            
-            document.getElementById('close-modal-button').addEventListener('click', hideModal);
-            document.getElementById('close-footer-button').addEventListener('click', hideModal);
-
-            if (expirationTimeMs > 0 && resultsModalElement) {
-                timerInterval = setInterval(updateTimer, 1000);
-                updateTimer();
-            } else if (timerDisplay) {
-                timerDisplay.innerHTML = "**Erreur de démarrage (Vérifiez les erreurs de console).**";
-            }
-            
-            // 🏎️ Script pour l'animation vidéo au clic du bouton Parier maintenant
-            const betButton = document.getElementById('bet-button');
-            const videoContainer = document.getElementById('video-background-container');
-            const betForm = document.getElementById('bet-form');
-            const bodyElement = document.body;
-            const betVideo = document.getElementById('bet-video'); 
-
-            if (betButton && videoContainer && betForm && betVideo) {
-                // IMPORTANT : Nous ciblons le formulaire et non le bouton pour intercepter la soumission.
-                // Le formulaire est soumis lors du clic sur le bouton.
-                betForm.addEventListener('submit', function(event) {
-                    
-                    // Si le formulaire n'est pas valide (champs requis manquants), ne fait rien.
-                    if (!betForm.checkValidity()) {
+                    if (!response.ok) {
+                        betButton.disabled = false;
+                        betButton.textContent = "Parier maintenant";
+                        alert("Erreur serveur");
                         return;
                     }
-                    
-                    // Empêcher la soumission immédiate du formulaire HTML pour le gérer via JS
-                    event.preventDefault(); 
-                    
-                    // 1. Masquer l'image statique
-                    bodyElement.classList.add('hide-bg-image');
-                    
-                    // 2. Afficher et jouer la vidéo (pour l'effet de transition/chargement)
-                    videoContainer.classList.remove('hidden');
-                    betVideo.currentTime = 0; // Rembobiner au début
-                    betVideo.play();
-                    
-                    // 3. Désactiver le bouton pour éviter les doubles clics
-                    betButton.disabled = true;
-                    betButton.textContent = 'Soumission en cours...';
 
-                    // 4. Soumettre le formulaire immédiatement après avoir déclenché la vidéo
-                    // Note : L'animation continuera jusqu'à ce que la page change.
-                    betForm.submit(); 
-                    
-                });
-            }
-        };
-    </script>
+                    // 2️⃣ Lancer la vidéo
+                    bodyElement.style.backgroundImage = "none";
+                    videoContainer.classList.remove('hidden');
+                    betVideo.currentTime = 0;
+                    betVideo.play();
+
+                } catch (e) {
+                    betButton.disabled = false;
+                    betButton.textContent = "Parier maintenant";
+                    alert("Impossible de communiquer avec le serveur.");
+                }
+
+            }); // ← FIN DU addEventListener
+
+        } // ← FIN DU if (betButton...)
+    }; // ← FIN du window.onload
+
+</script>
+
     
     <hr>
     
