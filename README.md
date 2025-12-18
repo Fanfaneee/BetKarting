@@ -83,7 +83,23 @@ http://127.0.0.1:8000/
 ---
 
 ## Screenshots 
+Page Home
 ![Page Home](/betkarting_project/betkarting_app/static/img/page_home.png)
+Page Parié
+![Page Home](/betkarting_project/betkarting_app/static/img/page_parie.png)
+Page Résultat
+![Page Home](/betkarting_project/betkarting_app/static/img/page_resultat.png)
+Page Profil
+![Page Home](/betkarting_project/betkarting_app/static/img/page_profil.png)
+Page Réglement
+![Page Home](/betkarting_project/betkarting_app/static/img/page_reglement.png)
+Page Login
+![Page Home](/betkarting_project/betkarting_app/static/img/page_login.png)
+Page Register
+![Page Home](/betkarting_project/betkarting_app/static/img/page_register.png)
+
+
+
 
 
 ## Architecture des Données
