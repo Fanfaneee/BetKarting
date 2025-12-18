@@ -12,9 +12,16 @@ import random
 from .utils import get_random_city_from_csv
 from django.http import JsonResponse
 from django.template.loader import render_to_string
+from decimal import Decimal, InvalidOperation 
+from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+
+from django.core.paginator import Paginator
+from django.shortcuts import render
 
 # Durée d'un pari 
-PARI_DURATION_MINUTES = 1
+PARI_DURATION_MINUTES = 2
 
 # --- FONCTION UTILITAIRE POUR LA CRÉATION DES PARTICIPATIONS (NON MODIFIÉE) ---
 def _creer_participations_pour_course(course):
@@ -56,10 +63,28 @@ def register(request):
         form = CustomUserCreationForm()
     return render(request, 'betkarting_app/register.html', {'form': form})
 
-@login_required
 def profile(request):
-    user = request.user
-    return render(request, 'betkarting_app/profile.html', {'user': user})
+    # 1. On récupère tous les paris de l'utilisateur, du plus récent au plus ancien
+    pari_list = request.user.pari_set.all().order_by('-date')
+    
+    # 2. Configuration de la pagination : 10 éléments par page
+    paginator = Paginator(pari_list, 10)
+    
+    # 3. Récupération de la page actuelle depuis l'URL
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # 4. On envoie l'utilisateur (pour le solde) ET l'objet page (pour le tableau)
+    context = {
+        'user': request.user,
+        'page_obj': page_obj
+    }
+    
+    return render(request, 'betkarting_app/profile.html', context)
+
+@login_required
+def reglement(request):
+    return render(request, 'betkarting_app/reglement.html')
 
 @login_required
 def home(request):
@@ -297,6 +322,28 @@ def terminer_pari_et_preparer_suivant(request, course_id):
         return JsonResponse({'success': True, 'course_id': course.id})
 
     return redirect("home") 
+
+@login_required
+def add_credit(request):
+    if request.method == 'POST':
+        amount_raw = request.POST.get('amount', '0')
+        try:
+            # On convertit en Decimal au lieu de float
+            amount = Decimal(amount_raw)
+            
+            if amount > 0:
+                user = request.user
+                # Maintenant les deux types sont compatibles (Decimal + Decimal)
+                user.balance += amount
+                user.save()
+                messages.success(request, f"{amount} € ont été ajoutés à votre compte !")
+            else:
+                messages.error(request, "Le montant doit être supérieur à 0.")
+        except (InvalidOperation, ValueError):
+            messages.error(request, "Montant invalide. Veuillez entrer un nombre correct.")
+            
+    return redirect('profile')
+
 
 @login_required
 def get_resultats_html(request, course_id):

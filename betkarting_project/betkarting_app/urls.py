@@ -8,13 +8,14 @@ urlpatterns =[
     path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
     path('register/', views.register, name='register'),
     path('profile/', views.profile, name='profile'),
+    path('reglement/', views.reglement, name='reglement'),
     path('parier/<int:course_id>/', views.parier, name='parier'),
     
     path('terminer_pari_et_preparer_suivant/<int:course_id>/', views.terminer_pari_et_preparer_suivant, name='terminer_pari_et_preparer_suivant'),
     
-    # Nouvelle API pour le contenu HTML de la modale
-    path('api/resultats_html/<int:course_id>/', views.get_resultats_html, name='api_resultats_html'),
     
+    path('api/resultats_html/<int:course_id>/', views.get_resultats_html, name='api_resultats_html'),
+    path('add-credit/', views.add_credit, name='add_credit'),
 
     
 ]

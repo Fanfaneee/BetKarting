@@ -6,28 +6,97 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}BetKarting{% endblock %}</title>
-    
+
     <script src="https://cdn.tailwindcss.com"></script>
-    
+
     <script>
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: {
+                        'a4-speed': ['A4 Speed Custom', 'sans-serif'],
+                        'pro-racing': ['Pro Racing Custom', 'sans-serif'],
+                        'pro-racing-outline': ['Pro Racing Outline Custom', 'sans-serif'],
+                        'f1-custom': ['Formula1betkarting', 'sans-serif'],
+                    },
                     colors: {
-                        'primary-blue': '#1e40af', // Un bleu foncé pour votre marque
-                        'secondary-gray': '#4b5563', 
+                        'primary-green': 'rgb(22 101 52)',
+                        'secondary-gray': '#4b5563',
+                        'secondary-blue': '#1C3B78 ',
                     },
                     backgroundImage: {
                         'kart-bg': "url('{% static 'img/background.png' %}')",
                         // AJOUT : Classe pour masquer l'image de fond statique
-                        'none': 'none', 
+                        'none': 'none',
+                        'kart-bg-no-road': "url('{% static 'img/background-no-road.png' %}')",
                     }
                 }
             }
         }
     </script>
-    
     <style>
+        @font-face {
+            font-family: 'Pro Racing Custom';
+            /* Nom 1 pour les versions pleines */
+            src: url("{% static 'fonts/Pro Racing.otf' %}") format('opentype');
+            font-weight: 400;
+            /* Regular */
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Pro Racing Custom';
+            /* Toujours Nom 1 */
+            src: url("{% static 'fonts/Pro Racing Slant.otf' %}") format('opentype');
+            font-weight: 400;
+            font-style: italic;
+        }
+
+
+        @font-face {
+            font-family: 'Pro Racing Outline Custom';
+            /* Nom 2 pour les versions outline */
+            src: url("{% static 'fonts/Pro Racing Outline.otf' %}") format('opentype');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+
+        @font-face {
+            font-family: 'Pro Racing Outline Custom';
+            /* Toujours Nom 2 */
+            src: url("{% static 'fonts/Pro Racing Slant Outline.otf' %}") format('opentype');
+            font-weight: 400;
+            font-style: italic;
+        }
+
+        /* 1. Formula 1 Regular (Poids Normal) */
+        @font-face {
+            font-family: 'Formula1betkarting';
+            src: url("{% static 'fonts/Formula1-Regular_web_0.ttf' %}") format('truetype');
+            font-weight: 400;
+            /* Poids par défaut pour 'font-normal' */
+            font-style: normal;
+        }
+
+        /* 2. Formula 1 Bold (Poids Gras) */
+        @font-face {
+            font-family: 'Formula 1 Custom';
+            src: url("{% static 'fonts/Formula1-Bold_web_0.ttf' %}") format('truetype');
+            font-weight: 700;
+            /* Poids pour 'font-bold' */
+            font-style: normal;
+        }
+
+        /* 3. Formula 1 Wide (Poids Intermédiaire ou 500) */
+        @font-face {
+            font-family: 'Formula 1 Custom';
+            src: url("{% static 'fonts/Formula1-Wide_web_0.ttf' %}") format('truetype');
+            font-weight: 500;
+            /* Poids pour 'font-medium' ou spécifique */
+            font-style: normal;
+        }
+
         .video-bg {
             position: fixed;
             top: 0;
@@ -35,62 +104,105 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            z-index: -10; /* Placé sous le contenu (main et header) */
-         
+            z-index: -10;
+            /* Placé sous le contenu (main et header) */
+
         }
+
         .hide-bg-image {
             background-image: none !important;
         }
+
+        .backdrop-blur-md {
+            /* Ajout du préfixe pour une meilleure compatibilité */
+            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
+        }
     </style>
 
-    {% load static %} 
+    {% load static %}
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col bg-kart-bg bg-cover bg-center bg-fixed">
-<div id="video-background-container" class="hidden"> 
-    <video autoplay loop muted class="video-bg" id="bet-video"> 
-        <source src="{% static 'video/animation.mp4' %}" type="video/mp4">
-        Votre navigateur ne supporte pas l'élément vidéo.
-    </video>
-</div>
-    
-<header class=" shadow-lg z-10 w-full bg-primary-blue bg-opacity-70"> <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
-            
-            <a href="{% url 'home' %}" class="text-2xl font-bold tracking-wider text-white hover:text-gray-200 transition duration-150">
+
+<body class="bg-gray-100 min-h-screen flex flex-col bg-cover bg-center bg-fixed 
+    {% if request.resolver_match.url_name == 'home' %}
+        bg-kart-bg
+    {% else %}
+        bg-kart-bg-no-road
+    {% endif %}
+">
+    <div id="video-background-container" class="hidden">
+        <video autoplay loop muted class="video-bg" id="bet-video">
+            <source src="{% static 'video/animation_kart.mp4' %}" type="video/mp4">
+            Votre navigateur ne supporte pas l'élément vidéo.
+        </video>
+    </div>
+
+    <header class="shadow-lg z-10 w-full ">
+        <nav class="w-full px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center relative">
+
+            <a href="{% url 'home' %}"
+                class="font-pro-racing italic text-2xl font-bold tracking-wider text-primary-green hover:text-gray-200 transition duration-150 z-20">
                 BetKarting
             </a>
-            
-            <div class="space-x-4 flex items-center">
-                
+
+            {% if course %}
+            <h2
+                class="absolute left-1/2 transform -translate-x-1/2 text-xl sm:text-2xl lg:text-3xl font-bold  z-10 whitespace-nowrap">
+                Circuit {{ course.ville }}
+            </h2>
+            {% endif %}
+
+            <div class="space-x-4 flex items-center z-20">
+
                 {% if user.is_authenticated %}
-                
-                <a href="{% url 'profile' %}" class="text-white hover:text-yellow-400 font-medium px-3 py-2 rounded-md transition duration-150">
+                <div class="flex items-center gap-1">
+                    <h2 class="flex font-bold text-primary-green items-center gap-1"> {{user.balance}}
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="yellow" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="yellow" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                        </svg>
+                    </h2>
+                </div>
+                <a href="{% url 'profile' %}"
+                    class="text-primary-green font-bold hover:text-black  px-3 py-2 rounded-md transition duration-150">
                     Profil
                 </a>
-                
+                <a href="{% url 'reglement' %}"
+                    class="text-primary-green  font-bold hover:text-black  px-3 py-2 rounded-md transition duration-150">
+                    Réglement
+                </a>
+
                 <form action="{% url 'logout' %}" method="post">
                     {% csrf_token %}
-                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition duration-150 shadow-md">
+                    <button type="submit"
+                        class="bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition duration-150 shadow-md">
                         Se déconnecter
                     </button>
                 </form>
-                
+
                 {% else %}
-                
-                <a href="{% url 'login' %}" class="text-white hover:text-yellow-400 font-medium px-3 py-2 rounded-md transition duration-150">
+
+                <a href="{% url 'login' %}"
+                    class="text-white hover:text-black font-medium px-3 py-2 rounded-md transition duration-150">
                     Se connecter
                 </a>
-                <a href="{% url 'register' %}" class="bg-yellow-400 hover:bg-yellow-500 text-primary-blue font-bold py-2 px-4 rounded-lg transition duration-150 shadow-md">
+                <a href="{% url 'register' %}"
+                    class="bg-green-700 hover:bg-gray-900 text-white font-bold py-2 px-4 rounded-lg transition duration-150 shadow-md">
                     S'inscrire
                 </a>
-                
+
+
+
                 {% endif %}
-                
+
             </div>
         </nav>
     </header>
 
-    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full z-10"> {% block content %}{% endblock %}
+    <main class="flex-grow w-full px-0 py-8 z-10 max-w-none">{% block content %}{% endblock %}
     </main>
-    
-    </body>
+
+</body>
+
 </html>

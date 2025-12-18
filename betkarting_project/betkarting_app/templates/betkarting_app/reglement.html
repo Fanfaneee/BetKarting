@@ -1,0 +1,95 @@
+{% extends "betkarting_app/base.html" %}
+{% load math_filters %}
+{% block title %}Règlement Officiel{% endblock %}
+
+{% block content %}
+<div class="reglement-container p-4 sm:p-8 md:p-12 max-w-4xl mx-auto rounded-xl shadow-2xl border-4 border-primary-green 
+             backdrop-blur-md  text-white
+">
+    
+    <h1 class="text-4xl sm:text-5xl font-extrabold text-center mb-6 border-b-4 border-primary-green pb-3 font-pro-racing italic text-primary-green">
+    Règlement de BetKarting
+    </h1>
+    
+    <p class="text-lg mb-8 text-white">
+        Bienvenue sur **BetKarting**. En vous inscrivant sur notre plateforme et en plaçant un pari, vous acceptez les conditions de jeu suivantes, qui régissent la participation aux paris sur nos Courses de Karting.
+    </p>
+
+    <div class="mb-10 p-6 rounded-lg">
+        <h2 class="text-3xl font-bold mb-4 font-f1-custom border-b border-gray-400 pb-2 text-primary-green">
+           Période et Clôture des Paris
+        </h2>
+        
+        <p class="text-white mb-4">
+            Chaque course est ouverte aux paris pour une durée limitée de **20 minutes** à compter de son lancement.
+        </p>
+
+        <ul class="list-disc list-inside space-y-3 ml-4 text-gray-200">
+            <li>Le temps est strictement décompté par le minuteur affiché sur la page d'accueil.</li>
+            <li>Une fois que le minuteur atteint zéro, les paris sont **clôturés immédiatement**. Aucun pari ne peut être enregistré, modifié ou annulé après ce délai.</li>
+            <li>Dès la clôture, le système procède à la désignation du Pilote Vainqueur, sur la base des **Probabilités de Victoire** initialement affichées pour chaque compétiteur. Cette désignation est définitive.</li>
+        </ul>
+    </div>
+
+    <div class="mb-10 p-6 rounded-lg border border-primary-green">
+        <h2 class="text-3xl font-bold mb-4 font-f1-custom border-b border-gray-400 pb-2 text-primary-green">
+            Conditions de Mise
+        </h2>
+        
+        <ul class="list-disc list-inside space-y-3 ml-4 text-gray-200">
+            <li class="font-semibold">Pari Unique : Chaque utilisateur est limité à un **Pari unique** par Course.</li>
+            <li>**Montant Minimum :** La mise minimale est fixée à **1 €** (unité de Solde).</li>
+            <li>**Multiplicateur (Cote) :** Le multiplicateur choisi par le parieur doit être égal ou supérieur à **1.00**.</li>
+            <li>**Déduction :** Le montant misé est immédiatement déduit de votre Solde dès l'enregistrement du pari. Si votre Solde est insuffisant, le pari sera refusé.</li>
+        </ul>
+    </div>
+
+    <div class="mb-10 p-4 rounded-lg border border-primary-green">
+        <h2 class="text-3xl font-bold mb-4 font-f1-custom  border-b border-gray-400 pb-2 text-primary-green">
+            Calcul des Résultats et des Gains
+        </h2>
+        
+        <div class="p-4 mb-4 rounded-md ">
+            <h3 class="text-xl font-bold text-green-700  mb-2">Pari Gagnant</h3>
+            <p class="text-white mb-2">
+                Si le Pilote sur lequel vous avez misé est désigné comme le Vainqueur, vous remportez un gain calculé comme suit :
+            </p>
+            <p class="text-center text-xl font-bold text-green-700  p-2 rounded-md">
+                Gain total = Montant misé × Multiplicateur choisi
+            </p>
+            <p class="text-white mt-2">
+                Le montant total gagné (votre mise initiale plus votre profit) est instantanément crédité sur votre Solde.
+            </p>
+        </div>
+
+        <div class="p-4 rounded-md  ">
+            <h3 class="text-xl font-bold text-red-700 mb-2">Pari Perdant</h3>
+            <p class="text-white">
+                Si votre Pilote n'est pas désigné comme le Vainqueur, la totalité du montant misé est perdue.
+            </p>
+        </div>
+    </div>
+
+    <div class="mb-6 p-6 rounded-lg border border-primary-green ">
+        <h2 class="text-3xl font-bold mb-4 font-f1-custom border-b border-gray-400 pb-2 text-primary-green">
+            Nature et Responsabilité du Solde
+        </h2>
+        
+        <p class="text-white mb-4">
+            Le Solde affiché sur BetKarting représente des **unités de jeu** ($€$) dédiées exclusivement à la participation aux paris sur cette plateforme.
+        </p>
+        
+        <div class="p-3 bg-red-600 text-white font-bold rounded-md mb-4">
+            ATTENTION : Ces unités de jeu <span class="underline">n'ont aucune valeur monétaire réelle</span> ou légale. Elles ne peuvent en aucun cas être échangées, remboursées, retirées ou converties en argent réel.
+        </div>
+        
+        <p class="text-sm text-gray-200">
+            Tfacon tu vas rien gagner
+        </p>
+    </div>
+    
+    <div class="mt-10 pt-4 border-t border-gray-300 text-center text-md text-primary-green font-f1-custom">
+        Nous vous souhaitons pas bonne chance et de bons paris (ça pue paris) !
+    </div>
+</div>
+{% endblock %}

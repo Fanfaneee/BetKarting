@@ -4,253 +4,352 @@
 
 {% block content %}
 <div class="space-y-8">
-    
+
     {% if course %}
-    <h3 class="text-xl font-semibold text-gray-700">
-        ⏳ Temps restant pour parier : <span id="timer-display" class="font-extrabold text-red-600">Calcul...</span>
+    <h3 class="text-xl text-center font-semibold text-gray-700 mb-4">
+        Temps restant pour parier
     </h3>
+
+    <div id="timer-display" class="flex !mt-2 justify-center gap-3 sm:gap-6">
+        <div class="flex flex-col gap-2 relative">
+            <div class="h-16 w-16 sm:w-24 sm:h-24 flex justify-between items-center bg-[#343650] rounded-lg">
+                <div class="relative h-2.5 w-2.5 !-left-[6px]  "></div>
+                <span id="minutes-display" class="text-3xl sm:text-5xl font-semibold text-white">0</span>
+                <div class="relative h-2.5 w-2.5 -right-[6px] "></div>
+            </div>
+            <span class="text-black text-xs sm:text-lg text-center capitalize">Minutes</span>
+        </div>
+
+        <div class="flex flex-col gap-2 relative">
+            <div class="h-16 w-16 sm:w-24 sm:h-24 flex justify-between items-center bg-[#343650] rounded-lg">
+                <div class="relative h-2.5 w-2.5 !-left-[6px] "></div>
+                <span id="seconds-display" class="text-3xl sm:text-5xl font-semibold  text-white">0</span>
+                <div class="relative h-2.5 w-2.5 -right-[6px] "></div>
+            </div>
+            <span class="text-black text-xs sm:text-lg text-center capitalize">Secondes</span>
+        </div>
+    </div>
     {% endif %}
 
-<script>
-    // --- Déclaration des variables globales pour le scope des fonctions ---
-    const expirationTimeMs = {{ date_expiration_ms|default:0 }};
-    const finishUrl = "{{ url_terminer_pari|default:'' }}";
-    const apiResultsUrlBase = "{% url 'api_resultats_html' 0 %}".replace('0/', '');
-    
-    let isCalculating = false;
-    let timerInterval;
+    <script>
+        // --- Déclaration des variables globales pour le scope des fonctions ---
+        const expirationTimeMs = {{ date_expiration_ms|default:0 }};
+        const finishUrl = "{{ url_terminer_pari|default:'' }}";
+        const apiResultsUrlBase = "{% url 'api_resultats_html' 0 %}".replace('0/', '');
 
-    let timerDisplay;
-    let formContainer;
-    let resultsModalElement;
-    
-    function showModal() {
-        resultsModalElement.classList.remove('hidden');
-        resultsModalElement.classList.add('flex');
-    }
+        let isCalculating = false;
+        let timerInterval;
 
-    function hideModal() {
-        resultsModalElement.classList.remove('flex');
-        resultsModalElement.classList.add('hidden');
-        window.location.reload(); 
-    }
+        let timerDisplay;
+        let formContainer;
+        let resultsModalElement;
 
-    function showResults(courseId) {
-        fetch(`${apiResultsUrlBase}${courseId}/`, {
-            method: 'GET',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('results-content').innerHTML = data.html;
-                showModal();
-            } else {
-                console.error("Erreur de récupération des résultats:", data.error);
-                window.location.reload();
-            }
-        })
-        .catch(error => {
-            console.error('Erreur réseau lors de la récupération des résultats:', error);
+        function showModal() {
+            resultsModalElement.classList.remove('hidden');
+            resultsModalElement.classList.add('flex');
+        }
+
+        function hideModal() {
+            resultsModalElement.classList.remove('flex');
+            resultsModalElement.classList.add('hidden');
             window.location.reload();
-        });
-    }
+        }
 
-    function updateTimer() {
-        const nowMs = new Date().getTime();
-        const distance = expirationTimeMs - nowMs;
-
-        if (distance > 0) {
-            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-            timerDisplay.innerHTML = `<span class="font-extrabold text-xl text-red-600">${minutes}m ${seconds}s</span>`; 
-
-        } else {
-            clearInterval(timerInterval);
-            timerDisplay.innerHTML = "**TEMPS ÉCOULÉ ! Calcul des résultats...**";
-
-            if (formContainer) {
-                formContainer.style.display = 'none';
-            }
-
-            if (finishUrl && !isCalculating) {
-                isCalculating = true;
-
-                fetch(finishUrl, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRFToken': '{{ csrf_token }}'
-                    }
-                })
+        function showResults(courseId) {
+            fetch(`${apiResultsUrlBase}${courseId}/`, {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        showResults(data.course_id); 
+                        document.getElementById('results-content').innerHTML = data.html;
+                        showModal();
                     } else {
-                        console.error("Erreur de calcul des résultats:", data.message);
+                        console.error("Erreur de récupération des résultats:", data.error);
                         window.location.reload();
                     }
                 })
                 .catch(error => {
-                    console.error('Erreur réseau lors du calcul:', error);
+                    console.error('Erreur réseau lors de la récupération des résultats:', error);
                     window.location.reload();
                 });
-
-            } else if (!finishUrl) {
-                window.location.reload();
-            }
         }
-    }
-    
-    // --- LANCEMENT DU SCRIPT APRÈS CHARGEMENT COMPLET DE LA PAGE ---
-    window.onload = function() {
-        timerDisplay = document.getElementById('timer-display');
-        formContainer = document.querySelector('form[action*="parier"]'); 
-        resultsModalElement = document.getElementById('resultsModal');
-        
-        document.getElementById('close-modal-button').addEventListener('click', hideModal);
-        document.getElementById('close-footer-button').addEventListener('click', hideModal);
 
-        if (expirationTimeMs > 0 && resultsModalElement) {
-            timerInterval = setInterval(updateTimer, 1000);
-            updateTimer();
-        } else if (timerDisplay) {
-            timerDisplay.innerHTML = "**Erreur de démarrage (Vérifiez les erreurs de console).**";
-        }
-        
-        // 🏎️ Script pour l'animation vidéo au clic du bouton Parier maintenant
-        const betButton = document.getElementById('bet-button');
-        const videoContainer = document.getElementById('video-background-container');
-        const betForm = document.getElementById('bet-form');
-        const bodyElement = document.body;
-        const betVideo = document.getElementById('bet-video'); 
+        function updateTimer() {
+            const nowMs = new Date().getTime();
+            const distance = expirationTimeMs - nowMs;
 
-        if (betButton && videoContainer && betForm && betVideo) {
+            if (distance > 0) {
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+                document.getElementById('minutes-display').textContent = minutes;
+                document.getElementById('seconds-display').textContent = seconds;
+                /* timerDisplay.innerHTML = `<span class="font-extrabold text-xl text-red-600">${minutes}m ${seconds}s</span>`; 
+                 */
+            } else {
+                clearInterval(timerInterval);
+                timerDisplay.innerHTML = "**TEMPS ÉCOULÉ ! Calcul des résultats...**";
 
-            betForm.addEventListener('submit', async function(event) {
-                event.preventDefault();
-
-                if (!betForm.checkValidity()) return;
-
-                betButton.disabled = true;
-                betButton.textContent = "Pari en cours...";
-
-                const formData = new FormData(betForm);
-
-                try {
-                    const response = await fetch(betForm.action, {
-                        method: "POST",
-                        body: formData
-                    });
-
-                    if (!response.ok) {
-                        betButton.disabled = false;
-                        betButton.textContent = "Parier maintenant";
-                        alert("Erreur serveur");
-                        return;
-                    }
-
-                    // 2️⃣ Lancer la vidéo
-                    bodyElement.style.backgroundImage = "none";
-                    videoContainer.classList.remove('hidden');
-                    betVideo.currentTime = 0;
-                    betVideo.play();
-
-                } catch (e) {
-                    betButton.disabled = false;
-                    betButton.textContent = "Parier maintenant";
-                    alert("Impossible de communiquer avec le serveur.");
+                if (formContainer) {
+                    formContainer.style.display = 'none';
                 }
 
-            }); // ← FIN DU addEventListener
+                if (finishUrl && !isCalculating) {
+                    isCalculating = true;
 
-        } // ← FIN DU if (betButton...)
-    }; // ← FIN du window.onload
+                    fetch(finishUrl, {
+                        method: 'POST',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                showResults(data.course_id);
+                            } else {
+                                console.error("Erreur de calcul des résultats:", data.message);
+                                window.location.reload();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erreur réseau lors du calcul:', error);
+                            window.location.reload();
+                        });
 
-</script>
+                } else if (!finishUrl) {
+                    window.location.reload();
+                }
+            }
+        }
 
-    
-    <hr>
-    
-    {% if course %}
-    <h2 class="text-3xl font-bold text-gray-800 border-b pb-2">🏁 Prochaine Course : {{ course.ville }}</h2>
-    <p class="text-lg text-gray-600">Record du circuit : **{{ course.record }} sec**</p>
+        // --- LANCEMENT DU SCRIPT APRÈS CHARGEMENT COMPLET DE LA PAGE ---
+        window.onload = function () {
+            timerDisplay = document.getElementById('timer-display');
+            formContainer = document.querySelector('form[action*="parier"]');
+            resultsModalElement = document.getElementById('resultsModal');
 
-    {% if error %}
-    <div class="p-4 mb-4 text-red-700 bg-red-100 rounded-lg font-bold" role="alert">
-        {{ error }}
-    </div>
-    {% endif %}
+            document.getElementById('close-modal-button').addEventListener('click', hideModal);
+            document.getElementById('close-footer-button').addEventListener('click', hideModal);
 
-    <hr class="border-t border-gray-300 my-6">
+            if (expirationTimeMs > 0 && resultsModalElement) {
+                timerInterval = setInterval(updateTimer, 1000);
+                updateTimer();
+            } else if (timerDisplay) {
+                timerDisplay.innerHTML = "**Erreur de démarrage (Vérifiez les erreurs de console).**";
+            }
+
+            // 🏎️ Script pour l'animation vidéo au clic du bouton Parier maintenant
+            const betButton = document.getElementById('bet-button');
+            const videoContainer = document.getElementById('video-background-container');
+            const betForm = document.getElementById('bet-form');
+            const bodyElement = document.body;
+            const betVideo = document.getElementById('bet-video');
+
+            if (betButton && videoContainer && betForm && betVideo) {
+
+                betForm.addEventListener('submit', async function (event) {
+                    event.preventDefault();
+
+                    if (!betForm.checkValidity()) return;
+
+                    betButton.disabled = true;
+                    betButton.textContent = "Pari en cours...";
+
+                    const formData = new FormData(betForm);
+
+                    try {
+                        const response = await fetch(betForm.action, {
+                            method: "POST",
+                            body: formData
+                        });
+
+                        if (!response.ok) {
+                            betButton.disabled = false;
+                            betButton.textContent = "Parier maintenant";
+                            alert("Erreur serveur");
+                            return;
+                        }
+
+                        // 2️⃣ Lancer la vidéo
+                        bodyElement.style.backgroundImage = "none";
+                        videoContainer.classList.remove('hidden');
+                        betVideo.currentTime = 0;
+                        betVideo.play();
+
+                    } catch (e) {
+                        betButton.disabled = false;
+                        betButton.textContent = "Parier maintenant";
+                        alert("Impossible de communiquer avec le serveur.");
+                    }
+
+                });
+
+            }
+        };
+
+function selectValue(type, value) {
+    // Mettre à jour la valeur de l'input caché
+    document.getElementById(type).value = value;
+
+    // Gérer l'aspect visuel (couleurs des boutons)
+    const btnClass = type === 'montant' ? '.btn-choice-montant' : '.btn-choice-multi';
+    const activeClass = type === 'montant' ? 'bg-green-600' : 'bg-green-600';
+    const activeBorder = type === 'montant' ? 'border-green-600' : 'border-green-600';
+
+    // Réinitialiser tous les boutons du groupe
+    document.querySelectorAll(btnClass).forEach(btn => {
+        btn.classList.remove('bg-green-600', 'bg-green-600', 'text-white', 'border-green-600', 'border-green-600');
+        btn.classList.add('bg-transparent', 'text-gray-700', 'border-gray-300');
+    });
+
+    // Activer le bouton cliqué
+    const clickedBtn = event.currentTarget;
+    clickedBtn.classList.remove('bg-transparent', 'border-gray-300');
+    clickedBtn.classList.add(activeClass, 'text-white', activeBorder);
+}
+
+// Initialiser les boutons par défaut au chargement
+window.addEventListener('DOMContentLoaded', () => {
+    // On simule un clic sur le premier bouton de chaque groupe pour l'état visuel initial
+    document.querySelector('.btn-choice-montant').click();
+    document.querySelector('.btn-choice-multi').click();
+});
+
+    </script>
 
     {% if pari_utilisateur %}
+    <style>
+        /* Force l'affichage du conteneur vidéo */
+        #video-background-container {
+            display: block !important;
+        }
+    </style>
+    <script>
+        // Cette fonction sera appelée après le chargement de la page si un pari existe
+        function playBetVideoIfPlaced() {
+            const videoContainer = document.getElementById('video-background-container');
+            const betVideo = document.getElementById('bet-video');
+            const bodyElement = document.body;
 
-    <div class="p-5 bg-green-100 border border-green-400 text-green-700 rounded-xl shadow-lg">
-        <h3 class="text-2xl font-semibold mb-2 flex items-center">
-            <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            ✅ Pari Placé !
-        </h3>
-        <p class="mb-1">Vous avez déjà misé **{{ pari_utilisateur.montant|floatformat:2 }} €** sur
-            **{{ pari_utilisateur.pilote_choisi.prenom }} {{ pari_utilisateur.pilote_choisi.nom }}**.</p>
-        <p class="mb-3">Multiplicateur choisi : **x{{ pari_utilisateur.multiplicateur|floatformat:2 }}**</p>
-        <p class="text-sm italic text-green-600">
-            Vous ne pouvez placer qu'un seul pari par course. Attendez les résultats !
-        </p>
-    </div>
+            if (videoContainer && betVideo) {
+                // S'assurer que la classe hidden est retirée
+                videoContainer.classList.remove('hidden');
 
-    {% else %}
+                // Si la vidéo n'est pas déjà jouée (pour éviter les re-démarrages inutiles)
+                if (betVideo.paused || betVideo.ended) {
+                    bodyElement.style.backgroundImage = "none";
+                    betVideo.currentTime = 0;
+                    // Tente de jouer la vidéo (peut nécessiter une interaction utilisateur selon le navigateur)
+                    betVideo.play().catch(error => {
+                        console.log("Lecture auto bloquée. La vidéo sera affichée mais ne démarrera qu'avec une interaction utilisateur.");
+                    });
+                }
+            }
+        }
 
-    <h3 class="text-2xl font-bold text-gray-800">💰 Placez Votre Pari</h3>
-    
-    <form id="bet-form" method="POST" action="{% url 'parier' course.id %}" class="max-w-md bg-white p-6 rounded-lg shadow-xl space-y-4">
-        {% csrf_token %}
-
-        <div>
-            <label for="pilote" class="block text-sm font-medium text-gray-700 mb-1">Choisir un pilote :</label>
-            <select name="pilote_id" id="pilote" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-blue focus:border-primary-blue">
-                {% for participation in participations %}
-                <option value="{{ participation.pilote.id }}">
-                    {{ participation.pilote.prenom }} {{ participation.pilote.nom }} - **Probabilité : {{ participation.proba|floatformat:2 }}%**
-                </option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div>
-            <label for="montant" class="block text-sm font-medium text-gray-700 mb-1">Montant à miser (€) :</label>
-            <input type="number" step="0.01" name="montant" id="montant" required min="1"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-blue focus:border-primary-blue" 
-                placeholder="Minimum 1 €">
-        </div>
-
-        <div>
-            <label for="multiplicateur" class="block text-sm font-medium text-gray-700 mb-1">Multiplicateur (Cote) :</label>
-            <input type="number" step="0.01" name="multiplicateur" id="multiplicateur" value="1.00" required min="1.00"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-blue focus:border-primary-blue">
-        </div>
-
-        <button type="submit" id="bet-button"
-            class="w-full bg-primary-blue hover:bg-indigo-700 text-white font-bold py-3 rounded-lg text-lg transition duration-150 shadow-md">
-            Parier maintenant
-        </button>
-    </form>
-
+        // Assurez-vous que la fonction est appelée après le chargement du DOM
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', playBetVideoIfPlaced);
+        } else {
+            playBetVideoIfPlaced();
+        }
+    </script>
     {% endif %}
 
-    <hr class="border-t border-gray-300 my-6">
 
-    <h3 class="text-2xl font-bold text-gray-800">Pilotes en lice et Probabilités de Victoire</h3>
-    <ul class="space-y-2 list-disc list-inside ml-4 mt-2 text-gray-700">
-        {% for participation in participations %}
-        <li>
-            **{{ participation.pilote.prenom }} {{ participation.pilote.nom }}** : <span class="font-semibold text-primary-blue">{{ participation.proba|floatformat:2 }}%</span>
-        </li>
-        {% endfor %}
-    </ul>
+    {% if course %}
+
+    <div
+        class="w-full px-5 flex flex-col lg:flex-row justify-between items-start lg:items-start space-y-8 lg:space-y-0">
 
 
+        <div class="lg:flex-1">
+            <div class="border-4 border-green-800  backdrop-blur-md rounded-2xl p-6 shadow-2xl max-w-md w-full">
+                <h3 class="text-2xl font-f1-custom  text-center  text-gray-800">Pilotes en lice et Probabilités de Victoire</h3>
+                <ul class="  font-f1-custom font-bold   list-inside ml-4 mt-2 text-black space-y-1">
+                    {% for participation in participations %}
+                    <li>
+                        {{ participation.pilote.prenom }} {{ participation.pilote.nom }} : <span
+                            class=" font-f1-custom text-primary-green">{{ participation.proba|floatformat:2 }}%</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="lg:flex-1 flex flex-col lg:items-end ">
+            {% if pari_utilisateur %}
+
+            <div class="border-4 border-green-800  backdrop-blur-md  rounded-2xl p-6 shadow-2xl max-w-md w-full">
+                <h3 class="text-2xl font-semibold mb-2 flex items-center">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Pari Placé !
+                </h3>
+                <p class="mb-1">Vous avez déjà misé {{ pari_utilisateur.montant|floatformat:2 }} € sur
+                    {{ pari_utilisateur.pilote_choisi.prenom }} {{ pari_utilisateur.pilote_choisi.nom }}.</p>
+                <p class="mb-3">Multiplicateur choisi : x{{ pari_utilisateur.multiplicateur|floatformat:2 }}</p>
+                <p class="text-sm italic text-black">
+                    Vous ne pouvez parier qu'une seule fois par course.
+                </p>
+            </div>
+
+            {% else %}
+            <div class="border-4 backdrop-blur-md  border-green-800 rounded-2xl p-6 shadow-2xl max-w-md w-full">
+                <h3 class="text-2xl font-f1-custom   text-gray-800 text-center mb-4">Placez Votre Pari</h3>
+
+                <form id="bet-form" method="POST" action="{% url 'parier' course.id %}" class="space-y-4">
+                    {% csrf_token %}
+
+                    <div>
+                        <label for="pilote" class="block text-sm font-medium text-gray-700 mb-1">Choisir un pilote
+                            :</label>
+                        <select name="pilote_id" id="pilote"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-primary-blue focus:border-primary-blue">
+                            {% for participation in participations %}
+                            <option value="{{ participation.pilote.id }}">
+                                {{ participation.pilote.prenom }} {{ participation.pilote.nom }} - Probabilité : {{participation.proba|floatformat:2 }}%
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                   <div>
+    <label class="block text-sm font-medium text-gray-700 mb-2">Montant à miser :</label>
+    <div class="grid grid-cols-3 gap-2">
+        <button type="button" onclick="selectValue('montant', 100)" class="btn-choice-montant border-2 border-gray-300 py-2 rounded-lg font-bold hover:border-green-600 transition">100 €</button>
+        <button type="button" onclick="selectValue('montant', 300)" class="btn-choice-montant border-2 border-gray-300 py-2 rounded-lg font-bold hover:border-green-600 transition">300 €</button>
+        <button type="button" onclick="selectValue('montant', 1000)" class="btn-choice-montant border-2 border-gray-300 py-2 rounded-lg font-bold hover:border-green-600 transition">1000 €</button>
+    </div>
+    <input type="hidden" name="montant" id="montant" value="100">
+</div>
+
+<div class="mt-4">
+    <label class="block text-sm font-medium text-gray-700 mb-2">Cote (Multiplicateur) :</label>
+    <div class="grid grid-cols-3 gap-2">
+        <button type="button" onclick="selectValue('multiplicateur', 2)" class="btn-choice-multi border-2 border-gray-300 py-2 rounded-lg font-bold hover:border-green-600 transition">x2</button>
+        <button type="button" onclick="selectValue('multiplicateur', 5)" class="btn-choice-multi border-2 border-gray-300 py-2 rounded-lg font-bold hover:border-green-600 transition">x5</button>
+        <button type="button" onclick="selectValue('multiplicateur', 8)" class="btn-choice-multi border-2 border-gray-300 py-2 rounded-lg font-bold hover:border-green-600 transition">x8</button>
+    </div>
+    <input type="hidden" name="multiplicateur" id="multiplicateur" value="2">
+</div>
+
+                    <button type="submit" id="bet-button"
+                        class="w-full bg-green-700 hover:bg-green-800 text-white font-bold py-3 rounded-lg text-lg transition duration-150 shadow-md">
+                        Parier maintenant
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
     {% else %}
     <p class="text-lg text-gray-600 p-4 bg-gray-100 border border-gray-300 rounded-lg">
         Aucune course disponible pour le moment.
@@ -258,26 +357,30 @@
 
     {% endif %}
 
-    <div id="resultsModal" 
-        class="hidden fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 justify-center items-center p-4" 
-        aria-labelledby="resultsModalLabel" 
-        aria-hidden="true">
-        
+    <div id="resultsModal"
+        class="hidden fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-50 justify-center items-center p-4"
+        aria-labelledby="resultsModalLabel" aria-hidden="true">
+
         <div class="relative w-full max-w-3xl my-6 mx-auto">
             <div class="bg-white rounded-lg shadow-2xl flex flex-col overflow-hidden">
-                
+
                 <div class="flex justify-between items-center p-5 border-b border-gray-200">
                     <h5 class="text-xl font-bold text-gray-800" id="resultsModalLabel">Résultats de la Course</h5>
-                    <button type="button" id="close-modal-button" class="text-gray-400 hover:text-gray-600 transition duration-150">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    <button type="button" id="close-modal-button"
+                        class="text-gray-400 hover:text-gray-600 transition duration-150">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
                     </button>
                 </div>
-                
-                <div class="p-6" id="results-content">
+
+                <div class="p-6 max-h-[65vh]" id="results-content">
                     Calcul en cours...
                 </div>
-                
-                <div class="flex justify-end p-4 border-t border-gray-200">
+
+                <div class="flex justify-end p-4 ">
                     <button type="button" id="close-footer-button"
                         class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg transition duration-150">
                         Fermer et continuer

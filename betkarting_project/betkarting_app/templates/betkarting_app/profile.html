@@ -1,18 +1,112 @@
 {% extends "betkarting_app/base.html" %}
 
-{% block title %}Profil{% endblock %}
+{% block title %}Profil - {{ user.username }}{% endblock %}
+
 {% block content %}
+<div
+  class="reglement-container p-4 sm:p-8 md:p-12 max-w-4xl mx-auto rounded-xl shadow-2xl border-4 border-primary-green backdrop-blur-md text-white">
 
-<h2>Profil de {{ user.username }}</h2>
-<p>Email : {{ user.email }}</p>
-<p>Solde : {{ user.balance }}</p>
+  <h1
+    class="text-4xl sm:text-5xl font-extrabold text-center mb-6 border-b-4 border-primary-green pb-3 font-pro-racing italic text-primary-green">
+    Profil Pilote
+  </h1>
 
-<h3>Mes paris :</h3>
-<ul>
-    {% for bet in user.bet_set.all %}
-    <li>Course : {{ bet.race.name }} - Montant : {{ bet.amount }} - Résultat : {{ bet.result }}</li>
-    {% empty %}
-    <li>Vous n'avez pas encore parié.</li>
-    {% endfor %}
-</ul>
+  <div class="mb-10 p-6 rounded-lg border border-primary-green ">
+    <h2 class="text-3xl font-bold mb-4 font-f1-custom border-b border-primary-green pb-2 text-primary-green">
+      Informations Personnelles
+    </h2>
+
+    <div class="space-y-4">
+      <div class="flex items-center justify-between border-b border-white/10 pb-2">
+        <span class="text-primary-green uppercase text-sm tracking-widest">Pseudo</span>
+        <span class="text-xl font-bold">{{ user.username }}</span>
+      </div>
+      <div class="flex items-center justify-between border-b border-white/10 pb-2">
+        <span class="text-primary-green uppercase text-sm tracking-widest">Email</span>
+        <span class="text-lg">{{ user.email }}</span>
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-primary-green uppercase text-sm tracking-widest">Solde Actuel</span>
+        <div class="flex items-center gap-2">
+          <span class="text-2xl font-black text-primary-green">{{ user.balance }}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="yellow" viewBox="0 0 24 24" stroke-width="1.5" stroke="yellow"
+            class="size-8">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+          </svg>
+       <div class="mt-6 p-4 rounded-lg  border border-primary-green/30">
+  <span class="text-primary-green uppercase text-xs tracking-widest block mb-3">Ravitaillement Crédits</span>
+  
+  <form action="{% url 'add_credit' %}" method="post" class="flex items-center gap-2">
+    {% csrf_token %}
+    <input type="number" name="amount" placeholder="Montant"   step="1" min="1" required  class="flex-grow bg-black/10 border border-primary-green text-white px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-primary-green transition-all">
+    <button  type="submit" class="bg-primary-green hover:bg-green-500 text-black font-black text-2xl w-12 h-10 rounded flex items-center justify-center transition-transform active:scale-95 shadow-[0_0_10px_rgba(0,255,0,0.3)]" title="Ajouter au crédit" >
+      +
+    </button>
+  </form>
+</div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-10 p-6 rounded-lg">
+    <h2 class="text-3xl font-bold mb-6 font-f1-custom border-b border-primary-green pb-2 text-primary-green">
+      Historique des Paris
+    </h2>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left">
+        <thead>
+          <tr class="text-primary-green uppercase text-sm border-b border-primary-green">
+            <th class="py-3 px-2">Course</th>
+            <th class="py-3 px-2">Mise</th>
+            <th class="py-3 px-2 text-right">Résultat</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-white/10">
+  {% for bet in page_obj %}  {# C'EST ICI LA VARIABLE IMPORTANTE #}
+  <tr class="hover:bg-white/5 transition-colors">
+    <td class="py-4 px-2 font-medium">{{ bet.course.ville }}</td>
+    <td class="py-4 px-2 italic">{{ bet.montant }} €</td>
+    <td class="py-4 px-2 text-right">
+       {% if bet.resultat == "gagné" %}
+          <span class="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold">GAGNÉ</span>
+       {% elif bet.resultat == "perdu" %}
+          <span class="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">PERDU</span>
+       {% else %}
+          <span class="bg-gray-600 text-white px-2 py-1 rounded text-xs font-bold">EN ATTENTE</span>
+       {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</tbody>
+      </table>
+      <div class="mt-6 flex justify-center items-center gap-4 font-f1-custom italic">
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" 
+           class="text-primary-green hover:text-white transition-all border border-primary-green px-3 py-1 rounded">
+           ⬅ PRÉCÉDENT
+        </a>
+    {% endif %}
+
+    <span class="text-white bg-primary-green/20 px-4 py-1 rounded border border-primary-green/50">
+        PAGE {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+    </span>
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" 
+           class="text-primary-green hover:text-white transition-all border border-primary-green px-3 py-1 rounded">
+           SUIVANT 
+        </a>
+    {% endif %}
+</div>
+    </div>
+  </div>
+
+  <div class="mt-10 pt-4 border-t border-primary-green text-center text-md text-primary-green font-f1-custom italic">
+    "Si tu n'es plus rapide que les autres, sois au moins plus riche."
+  </div>
+</div>
 {% endblock %}

@@ -7,10 +7,10 @@
     
     
     <div class="lg:p-36 md:p-52 sm:p-20 p-8 w-full lg:w-1/2 flex items-center justify-center">
-        <div class="bg-white p-8 rounded-lg shadow-2xl w-full max-w-md">
+        <div class="bg-primary-green/15 p-8 rounded-lg shadow-2xl w-full max-w-md">
             <h1 class="text-3xl font-bold mb-6 text-gray-800 text-center">Connexion</h1>
 
-            <form method="post">
+            <form method="post" class="w-full">
                 {% csrf_token %}
 
                 {% for field in form %}
@@ -36,28 +36,28 @@
                         padding-left: 0.75rem; /* px-3 */
                         outline: none;
                     }
-                    /* Style au focus */
+                    /* Style au focus : Mise à jour en vert cohérent */
                     .w-full input[type="text"]:focus,
                     .w-full input[type="password"]:focus,
                     .w-full input[type="email"]:focus {
-                        border-color: #3b82f6; /* blue-500 */
-                        box-shadow: 0 0 0 1px #3b82f6;
+                        border-color: #10B981; /* Vert cohérent */
+                        box-shadow: 0 0 0 1px #10B981;
                     }
                 </style>
                 
-                <div class="flex justify-between flex-col items-center mb-6">
+                <div class="flex justify-between flex-col sm:flex-row items-center mb-6 space-y-2 sm:space-y-0">
                     <div class="flex items-center">
-                        <input type="checkbox" id="remember" name="remember" class="text-red-500 rounded focus:ring-red-500">
+                        <input type="checkbox" id="remember" name="remember" class="text-primary-green rounded focus:ring-primary-green">
                         <label for="remember" class="text-gray-700 ml-2 text-sm">Se souvenir de moi</label>
                     </div>
                     
                     <div class="text-sm">
-                        <a href="#" class="text-blue-500 hover:text-blue-700 hover:underline transition duration-150 ease-in-out">Mot de passe oublié ?</a>
+                        <a href="#" class="text-primary-green hover:text-green-800 hover:underline transition duration-150 ease-in-out">Mot de passe oublié ?</a>
                     </div>
                 </div>
 
                 <button type="submit"
-                    class="bg-red-500 hover:bg-red-600 text-white font-semibold rounded-md py-3 px-4 w-full transition duration-150 ease-in-out">
+                    class="bg-green-700 hover:bg-green-800 text-white font-semibold rounded-md py-3 px-4 w-full transition duration-150 ease-in-out">
                     Se connecter
                 </button>
             </form>
@@ -65,7 +65,7 @@
             <div class="mt-6 text-center">
                 <p class="text-gray-600 text-sm">
                     Pas encore de compte ? 
-                    <a href="#" class="text-green-500 hover:text-green-700 font-semibold hover:underline transition duration-150 ease-in-out">
+                    <a href="{% url 'register' %}" class="text-primary-green hover:text-primary-green-dark font-semibold hover:underline transition duration-150 ease-in-out">
                         Inscrivez-vous ici
                     </a>
                 </p>

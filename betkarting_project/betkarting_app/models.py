@@ -3,7 +3,7 @@ from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 
 class CustomUser(AbstractUser):
-    balance = models.DecimalField(max_digits=10, decimal_places=2, default=1000)
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=10000)
 
     def __str__(self):
         return self.username
