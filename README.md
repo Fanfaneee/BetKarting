@@ -127,6 +127,6 @@ Le projet repose sur une architecture relationnelle Django robuste :
 
 ##  Contexte Académique
 
-Projet développé dans le cadre du **MMI3 – BetKarting**.
+Projet développé dans le cadre du cours de Django en Métiers du Multimédia et de l'Internet 3 spécialité Web .
 
 > ⚠️ Ce projet est **strictement fictif** et n’implique aucun pari réel ou financier.
