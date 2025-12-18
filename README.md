@@ -82,6 +82,10 @@ http://127.0.0.1:8000/
 
 ---
 
+## Screenshots 
+![Page Home](/betkarting_project/betkarting_app/static/img/page_home.png)
+
+
 ## Architecture des Données
 
 Le projet repose sur une architecture relationnelle Django robuste :
