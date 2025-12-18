@@ -98,30 +98,12 @@ Page Login
 Page Register
 ![Page Home](/betkarting_project/betkarting_app/static/img/page_register.png)
 
-
-
-
-
-## Architecture des Données
-
-Le projet repose sur une architecture relationnelle Django robuste :
-
-- **CustomUser**  
-  Gère l’authentification et le solde financier (`balance`).
-
-- **Course & Participation**  
-  Définissent le lieu de la course, les pilotes engagés et leurs probabilités respectives.
-
-- **Pari**  
-  Enregistre les mises et calcule les gains de manière sécurisée (`Decimal * Float`).
-
 ---
 
 ##  Stack Technique
 
 - **Backend** : Django 5.2 (Python 3.13)
-- **Frontend** : Tailwind CSS, JavaScript (Vanilla ES6+)
-- **Précision Numérique** : Librairie `Decimal` pour la sécurité des calculs monétaires
+- **Frontend** : Tailwind CSS, JavaScript 
 
 ---
 
